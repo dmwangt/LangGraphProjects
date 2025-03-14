@@ -113,7 +113,7 @@ parent_builder.add_edge("update_memory", END)
 react_agent_graph = parent_builder.compile()
 
 #visualise the graph 
-display_graph(react_agent_graph,file_name= os.path.basename(__file__))
+#display_graph(react_agent_graph,file_name= os.path.basename(__file__))
 
 # Initialize memory
 checkpointer = MemorySaver()

@@ -47,7 +47,7 @@ builder.add_edge("regular_greeting", END)
 graph = builder.compile()
 
 #Display the graph
-display_graph(graph)
+#display_graph(graph)
 
 # Test with a greeting containing "Hi" in various forms (e.g., uppercase, mixed case)
 result = graph.invoke({"greeting": "HI THERe!"})
@@ -55,6 +55,6 @@ print(result)  # Expected Output: {'greeting': 'Hi there, hi there!'}
 
 # Test with a greeting not containing "Hi"
 result = graph.invoke({"greeting": "Good morning!"})
-print(result)  # Expected Output: {'greeting': 'Hello, good morning!'}
+print(result['greeting'])  # Expected Output: {'greeting': 'Hello, good morning!'}
 
 

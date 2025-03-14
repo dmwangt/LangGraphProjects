@@ -91,12 +91,14 @@ pip install langgraph langchain_openai python-dotenv
 ### Setting Up Your Environment
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/jkmaina/LangGraphProjects.git
    cd langgraph-blueprint
    ```
 
 2. Create a virtual environment:
+
    ```bash
    python -m venv langgraph_env
    source langgraph_env/bin/activate  # On Linux/macOS
@@ -104,6 +106,7 @@ pip install langgraph langchain_openai python-dotenv
    ```
 
 3. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -120,11 +123,24 @@ pip install langgraph langchain_openai python-dotenv
 
 - Navigate to the `/chapter1/lesson1a.py` directory.
 - Run the Hello World LangGraph workflow:
-   ```bash
-   python lesson1a.py
-   ```
+  ```bash
+  python lesson1a.py
+  ```
 
 ---
+
+If you got the error like this:
+
+```
+
+```
+
+Then run in Linux Debian/Ubuntu:
+
+```shell
+sudo apt-get update
+sudo apt-get install xdg-utils
+```
 
 ## Contributing 🤝
 

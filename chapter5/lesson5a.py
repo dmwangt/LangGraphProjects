@@ -1,17 +1,23 @@
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START, END
 from dotenv import load_dotenv
 import os
+from langchain.chat_models import init_chat_model
 
 # Initialize the LLM (using OpenAI in this example)
-api_key = os.getenv("OPENAI_API_KEY")
-model = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
+api_key = os.getenv("GOOGLE_API_KEY")
+
+print("API key loaded successfully", api_key)
+
+# Initialize a ChatAI model
+model = init_chat_model("gemini-2.0-flash-exp", model_provider="google_genai")
+
 
 # Function to handle the user query and call the LLM
 def call_llm(state: MessagesState):
     messages = state["messages"]
     response = model.invoke(messages[-1].content)
     return {"messages": [response]}
+
 
 # Define the graph
 workflow = StateGraph(MessagesState)
@@ -27,8 +33,11 @@ workflow.add_edge("call_llm", END)
 app = workflow.compile()
 
 # Example input message from the user
-input_message = {    
-    "messages": [("human", "What is the capital of Kenya?")]
+input_message = {
+    "messages": [
+        ("system", "you are a geography expert."),
+        ("human", "What is the capital of Kenya?"),
+    ]
 }
 
 # Run the workflow

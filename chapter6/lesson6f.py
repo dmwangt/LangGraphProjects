@@ -1,18 +1,23 @@
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from langchain_core.runnables import RunnableConfig
 from typing import TypedDict
+
 
 # Define the state schema using TypedDict
 class State(TypedDict):
     foo: str
     bar: list[str]
 
+
 # Define node functions to update the state
 def node_a(state: State):
     return {"foo": "a", "bar": ["a"]}
 
+
 def node_b(state: State):
     return {"foo": "b", "bar": ["b"]}
+
 
 # Build the workflow graph
 workflow = StateGraph(State)
@@ -27,10 +32,9 @@ checkpointer = MemorySaver()
 graph = workflow.compile(checkpointer=checkpointer)
 
 # Run the graph with thread_id and capture checkpoints
-config = {"configurable": {"thread_id": "1"}}
+config: RunnableConfig = {"configurable": {"thread_id": "1"}}
 graph.invoke({"foo": "", "bar": []}, config)
 
-config = {"configurable": {"thread_id": "1"}}
 latest_state = graph.get_state(config)
 print(latest_state.values)  # {'foo': 'b', 'bar': ['a', 'b']}
 

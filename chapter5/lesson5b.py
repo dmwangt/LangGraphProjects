@@ -1,14 +1,15 @@
-from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, MessagesState, START, END
 from dotenv import load_dotenv
 import os
+from langchain.chat_models import init_chat_model
 
-# Load API key from .env file
-load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
+# Initialize the LLM (using OpenAI in this example)
+api_key = os.getenv("GOOGLE_API_KEY")
 
-# Initialize the LLM (using OpenAI's GPT-4o)
-model = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
+print("API key loaded successfully", api_key)
+
+# Initialize a ChatAI model
+model = init_chat_model("gemini-2.0-flash-exp", model_provider="google_genai")
 
 # Node function to handle the user query and call the LLM
 def call_llm(state: MessagesState):

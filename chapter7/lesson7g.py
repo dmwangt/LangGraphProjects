@@ -13,8 +13,8 @@ def long_running_node(state: MessagesState,  writer: StreamWriter):
 # Define the graph
 workflow = StateGraph(MessagesState)
 workflow.add_node("long_running_node", long_running_node)
-workflow.add_edge(START, "long_running_node")
-workflow.add_edge("long_running_node", END)
+workflow.set_entry_point("long_running_node")
+workflow.set_finish_point("long_running_node")
 
 # Compile the graph
 app = workflow.compile()
@@ -27,6 +27,6 @@ def simulate_interaction():
         if "progress" in result[-1]:
             print(result[-1])  # Stream custom progress updates
         else:
-            print(result[-1]) # Stream final message
+            print("Done", result[-1]) # Stream final message
 
 simulate_interaction()

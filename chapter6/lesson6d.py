@@ -5,13 +5,16 @@ from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
 import os
 import uuid
+from langchain.chat_models import init_chat_model
 
-# Load API key from .env file
-load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
+# Initialize the LLM (using OpenAI in this example)
+api_key = os.getenv("GOOGLE_API_KEY")
 
-# Initialize the LLM (using OpenAI's GPT-4o-mini)
-model = ChatOpenAI(model="gpt-4o-mini", api_key=api_key)
+print("API key loaded successfully", api_key)
+
+
+# Initialize a ChatAI model
+model = init_chat_model("gemini-2.0-flash-exp", model_provider="google_genai")
 
 # Initialize an in-memory store to store user information across sessions
 in_memory_store = InMemoryStore()
@@ -24,32 +27,11 @@ def call_llm(state: MessagesState, config, *, store=in_memory_store):
     # Check if the user provided their name
     if "my name is" in user_input.lower():
         name = user_input.split("my name is")[-1].strip().title()
-        state["user_name"] = name
-
-        # Store the user's name in the memory store
-        user_id = config["configurable"]["user_id"]
-        namespace = (user_id, "memories")
-        memory_id = str(uuid.uuid4())
-        memory = {"user_name": name}
-
-        # Save the memory to the in-memory store
-        store.put(namespace, memory_id, memory)
+        # state["user_name"] = name
 
         return {"messages": [f"Nice to meet you, {name}! Your name has been saved."]}
 
-    # Check if the user asks for their name
-    elif "what's my name" in user_input.lower():
-        user_id = config["configurable"]["user_id"]
-        namespace = (user_id, "memories")
-
-        # Retrieve the stored memories
-        memories = store.search(namespace)
-        if memories:
-            stored_name = memories[-1].value["user_name"]
-            return {"messages": [f"Your name is {stored_name}."]}
-        else:
-            return {"messages": ["I don't have any information about your name yet."]}
-
+    
     # Default behavior: call the LLM to handle other inputs
     response = model.invoke(messages)
     return {"messages": [response]}

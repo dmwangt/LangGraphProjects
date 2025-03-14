@@ -40,6 +40,6 @@ print(result)
 
 
 
-{'messages': [ToolMessage(content="{'name': 'Alice', 'age': 30, 'location': 'New York'}", 
-    name='get_user_profile', tool_call_id='tool_call_id')]}
+# {'messages': [ToolMessage(content="{'name': 'Alice', 'age': 30, 'location': 'New York'}", 
+#     name='get_user_profile', tool_call_id='tool_call_id')]}
 

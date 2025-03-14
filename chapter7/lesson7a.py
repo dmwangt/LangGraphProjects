@@ -1,9 +1,18 @@
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import init_chat_model
 from langgraph.graph import StateGraph, MessagesState, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 
-# Initialize the LLM and define a basic multiplication tool
-llm = ChatOpenAI(model="gpt-4o-mini")
+import os
+from langchain.chat_models import init_chat_model
+
+# Initialize the LLM (using OpenAI in this example)
+api_key = os.getenv("GOOGLE_API_KEY")
+
+print("API key loaded successfully", api_key)
+
+# Initialize a ChatAI model
+llm = init_chat_model("gemini-2.0-flash-exp", model_provider="google_genai")
+
 
 # Define a multiplication tool
 def multiply(a: int, b: int) -> int:
@@ -12,8 +21,10 @@ def multiply(a: int, b: int) -> int:
     """
     return a * b
 
+
 # Bind the LLM with the tool
 llm_with_tools = llm.bind_tools([multiply])
+
 
 # Node that calls the LLM with tools bound
 def tool_calling_llm(state: MessagesState):
@@ -22,10 +33,13 @@ def tool_calling_llm(state: MessagesState):
     """
     return {"messages": [llm_with_tools.invoke(state["messages"])]}
 
+
 # Build the workflow
 builder = StateGraph(MessagesState)
 builder.add_node("tool_calling_llm", tool_calling_llm)
-builder.add_node("tools", ToolNode([multiply]))  # Tool node for handling tool invocation
+builder.add_node(
+    "tools", ToolNode([multiply])
+)  # Tool node for handling tool invocation
 
 # Add the conditional edge based on tool usage
 builder.add_conditional_edges(
@@ -39,6 +53,7 @@ builder.add_edge("tools", END)  # If tool is called, terminate after tool execut
 
 # Compile the graph
 graph = builder.compile()
+
 
 # Simulate invoking the graph
 def simulate():
