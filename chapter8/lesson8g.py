@@ -1,33 +1,48 @@
 from typing import Annotated, Sequence, TypedDict
 from langchain_core.messages import BaseMessage
+from langchain_core.tools import BaseTool
 from langgraph.graph.message import add_messages
-from langchain_openai import ChatOpenAI
+
 from langchain_core.tools import tool
 import json
 from langchain_core.messages import ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import SystemMessage
-from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, END, START
-from display_graph import display_graph
+from langgraph.graph import StateGraph, END
+
 import os
+from langchain.chat_models import init_chat_model
+from textblob import TextBlob
+from display_graph import display_graph
+
+# Initialize the LLM (busing Gemini in this example)
+api_key = os.getenv("GOOGLE_API_KEY")
+
+# Initialize a ChatAI model
+llm = init_chat_model(
+    "gemini-2.0-flash-exp", model_provider="google_genai", temperature=0.8
+)
+
 
 class AgentState(TypedDict):
     """The state of the agent."""
+
     # `add_messages` is a reducer that manages the message sequence.
     messages: Annotated[Sequence[BaseMessage], add_messages]
+
 
 @tool
 def analyze_sentiment(feedback: str) -> str:
     """Analyze customer feedback sentiment with below custom logic"""
-    from textblob import TextBlob
+
     analysis = TextBlob(feedback)
     if analysis.sentiment.polarity > 0.5:
         return "positive"
-    elif analysis.sentiment.polarity == 0.5:
-        return "neutral"
-    else:
+    elif analysis.sentiment.polarity < 0.5:
         return "negative"
+    else:
+        return "neutral"
+
 
 @tool
 def respond_based_on_sentiment(sentiment: str) -> str:
@@ -39,12 +54,13 @@ def respond_based_on_sentiment(sentiment: str) -> str:
     else:
         return "We're sorry to hear that you're not satisfied. How can we help?"
 
-tools = [analyze_sentiment, respond_based_on_sentiment]
 
-llm = ChatOpenAI(model="gpt-4o-mini")
+tools: Sequence[BaseTool] = [analyze_sentiment, respond_based_on_sentiment]
+
 llm = llm.bind_tools(tools)
 
 tools_by_name = {tool.name: tool for tool in tools}
+
 
 def tool_node(state: AgentState):
     outputs = []
@@ -59,12 +75,14 @@ def tool_node(state: AgentState):
         )
     return {"messages": outputs}
 
-def call_model(state: AgentState, config: RunnableConfig):
+
+def call_model(state: AgentState):
     system_prompt = SystemMessage(
         content="You are a helpful assistant tasked with responding to customer feedback."
     )
-    response = llm.invoke([system_prompt] + state["messages"], config)
+    response = llm.invoke([system_prompt] + state["messages"])
     return {"messages": [response]}
+
 
 def should_continue(state: AgentState):
     last_message = state["messages"][-1]
@@ -73,7 +91,8 @@ def should_continue(state: AgentState):
         return "end"
     else:
         return "continue"
-    
+
+
 workflow = StateGraph(AgentState)
 workflow.add_node("agent", call_model)
 workflow.add_node("tools", tool_node)
@@ -90,10 +109,13 @@ workflow.add_edge("tools", "agent")
 
 graph = workflow.compile()
 
-display_graph(graph, file_name=os.path.basename(__file__))
+# display_graph(graph, file_name=os.path.basename(__file__))
 
 # Initialize the agent's state with the user's feedback
-initial_state = {"messages": [("user", "The product was great but the delivery was poor.")]}
+initial_state = {
+    "messages": [("user", "The product was great but the delivery was poor.")]
+}
+
 
 # Helper function to print the conversation
 def print_stream(stream):
@@ -104,8 +126,6 @@ def print_stream(stream):
         else:
             message.pretty_print()
 
+
 # Run the agent
 print_stream(graph.stream(initial_state, stream_mode="values"))
-
-
-
