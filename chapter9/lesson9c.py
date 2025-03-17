@@ -1,10 +1,20 @@
 # Import necessary modules
-from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from langgraph.graph import MessagesState, START, END, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode
-from display_graph import display_graph
+from langchain.chat_models import init_chat_model
+from langchain_core.runnables import RunnableConfig
+import os
+
+# Set up your OpenAI API key
+openai_api_key = os.getenv("OPENAI_API_KEY")
+
+# Initialize the ChatOpenAI instance
+model = init_chat_model(
+    "gemini-2.0-flash-exp", model_provider="google_genai", temperature=0.8
+)
+
 
 # Define the tool: a web search function
 @tool
@@ -19,7 +29,6 @@ tools = [search]
 tool_node = ToolNode(tools)
 
 # Set up the AI model (simulated with ChatAnthropic)
-model = ChatOpenAI(model="gpt-4o-mini")
 model = model.bind_tools(tools)
 
 # Define conditional logic to determine whether to continue or stop
@@ -64,7 +73,7 @@ memory = MemorySaver()
 app = workflow.compile(checkpointer=memory, interrupt_before=["call_tool"])
 
 # Display the graph
-display_graph(app, file_name="react_agent_graph.png")
+#display_graph(app, file_name="react_agent_graph.png")
 
 # Simulate user input for the agent
 initial_input = {"messages": [{"role": "user", "content": "What's the weather in San Francisco?"}]}

@@ -4,10 +4,11 @@ from langgraph.graph import MessagesState, START, END, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.tools import tool
 from langgraph.prebuilt import ToolNode
-from langchain_openai import ChatOpenAI
+from langchain.chat_models import init_chat_model
 from pydantic import BaseModel
 
 from display_graph import display_graph
+
 
 # Define tools for the agent
 @tool
@@ -16,39 +17,44 @@ def search(query: str):
     # Simulate searching the web
     return f"I looked up: {query}. Result: It's sunny in San Francisco, but you better look out if you're a Gemini 😈."
 
+
 # Define the human feedback tool
 class AskHuman(BaseModel):
     """Simulates asking a human a question."""
+
     question: str
+
 
 # Set up the tools and tool nodes
 tools = [search]
 tool_node = ToolNode(tools)
 
 # Set up the AI model
-model = ChatOpenAI(model="gpt-4o")
+model = init_chat_model(model="gemini-2.0-flash-exp", provider="google-genai")
 
 # Bind the model to tools including the ask_human tool
-model = model.bind_tools(tools + [AskHuman])
+model = model.bind_tools([search, AskHuman])
 
 # Define functions for the agent
+
 
 # Function to decide the next step based on the last message
 def should_continue(state):
     messages = state["messages"]
     last_message = messages[-1]
-    
+
     # If no tool call, finish the process
     if not last_message.tool_calls:
         return "end"
-    
+
     # If the tool call is AskHuman, return that node
     elif last_message.tool_calls[0]["name"] == "AskHuman":
         return "ask_human"
-    
+
     # Otherwise, continue the workflow
     else:
         return "continue"
+
 
 # Function to call the model and return the response
 def call_model(state):
@@ -56,9 +62,11 @@ def call_model(state):
     response = model.invoke(messages)
     return {"messages": [response]}
 
+
 # Define the human interaction node
 def ask_human(state):
     pass  # No actual processing here, this is handled as a breakpoint
+
 
 # Build the workflow graph
 
@@ -75,13 +83,13 @@ workflow.add_edge(START, "agent")
 
 # Define conditional edges based on the agent's output
 workflow.add_conditional_edges(
-    "agent", 
-    should_continue, 
+    "agent",
+    should_continue,
     {
         "continue": "action",  # Proceed to the tool action
         "ask_human": "ask_human",  # Ask human for input
         "end": END,  # Finish the process
-    }
+    },
 )
 
 # Add the edge from action back to agent for continued workflow
@@ -125,7 +133,3 @@ app.update_state(config, {"messages": tool_message}, as_node="ask_human")
 # Continue the agent's workflow
 for event in app.stream(None, config, stream_mode="values"):
     event["messages"][-1].pretty_print()
-
-
-
-

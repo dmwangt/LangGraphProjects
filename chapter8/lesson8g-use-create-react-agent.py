@@ -2,6 +2,7 @@ from typing import Annotated, Sequence, TypedDict
 from langchain_core.messages import BaseMessage
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
+from langchain_core.runnables import RunnableConfig
 import os
 from langchain.chat_models import init_chat_model
 from textblob import TextBlob
