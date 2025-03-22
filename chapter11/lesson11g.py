@@ -1,6 +1,7 @@
 import os
 from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_core.prompts import ChatPromptTemplate
@@ -8,6 +9,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 import tiktoken
+from langchain.chat_models import init_chat_model
 
 # Step 1: Load the document
 file_path = os.path.join(os.getcwd(), "chapter11", "Faiss by FacebookAI.pdf")
@@ -18,20 +20,21 @@ text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 documents = text_splitter.split_documents(raw_documents)
 
 # Step 3: Initialize the embeddings model
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-large"
-)
+# embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 # Step 4: Index the document chunks in Chroma vector store
 db = Chroma.from_documents(documents=documents, embedding=embeddings)
 print("Documents indexed in Chroma successfully.")
 
 # Step 5: Define a retriever for similarity search
-retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": 3})  # Retrieve top 3 relevant chunks
+retriever = db.as_retriever(
+    search_type="similarity", search_kwargs={"k": 3}
+)  # Retrieve top 3 relevant chunks
 
 # Step 6: Define the prompt template for the LLM
 prompt = ChatPromptTemplate.from_template(
-"""
+    """
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
 Question: {question} 
 Context: {context} 
@@ -40,7 +43,9 @@ Answer:
 )
 
 # Step 7: Initialize the ChatOpenAI model (e.g., gpt-4 or another preferred model)
-model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+model = init_chat_model(
+    "gemini-2.0-flash", model_provider="google_genai", temperature=0
+)
 
 # Step 8: Set up the Retrieval-Augmented Generation (RAG) chain
 rag_chain = (
@@ -51,6 +56,7 @@ rag_chain = (
 )
 
 # Step 9: Ask a question and generate a response
-question = "Can you explain what FAISS is used for?"
+#question = "Can you explain what FAISS is used for?"
+question = "What faiss can do and may I have a demo?"
 for chunk in rag_chain.stream(question):
     print(chunk, end="", flush=True)
