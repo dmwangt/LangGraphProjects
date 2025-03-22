@@ -1,8 +1,6 @@
 from typing import Annotated
 
-
 from langchain_community.tools.tavily_search import TavilySearchResults
-from langchain_core.tools import tool
 from typing_extensions import TypedDict
 
 from langgraph.checkpoint.memory import MemorySaver
@@ -16,17 +14,6 @@ import os
 
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.tools import tool
-from typing_extensions import TypedDict
-
-from langgraph.checkpoint.memory import MemorySaver
-from langgraph.graph import StateGraph, START, END
-from langgraph.graph.message import add_messages
-from langgraph.prebuilt import ToolNode, tools_condition
-
-from langgraph.types import Command, interrupt
-
-# Set up your OpenAI API key
-openai_api_key = os.getenv("OPENAI_API_KEY")
 
 # Initialize the ChatOpenAI instance
 llm = init_chat_model(
