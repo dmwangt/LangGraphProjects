@@ -1,6 +1,11 @@
+"""
+pip install pypdf
+
+"""
 import os
 from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
 import tiktoken
@@ -14,13 +19,12 @@ text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
 documents = text_splitter.split_documents(raw_documents)
 
 # Step 3: Initialize the embeddings model
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-large"
-)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 # Step 4: Index the document chunks in Chroma vector store
 db = Chroma.from_documents(documents=documents, embedding=embeddings)
 print("Documents indexed in Chroma successfully.")
+
 
 # Step 5: Calculate the number of tokens for each chunk
 def num_tokens_from_string(string: str, encoding_string: str) -> int:
@@ -29,7 +33,13 @@ def num_tokens_from_string(string: str, encoding_string: str) -> int:
     num_tokens = len(encoding.encode(string))
     return num_tokens
 
+
 # Calculate tokens for each document chunk and display the result
 for idx, doc in enumerate(documents):
-    num_tokens = num_tokens_from_string(doc.page_content, encoding_string="cl100k_base")  # "cl100k_base" for OpenAI's token encoding
-    print(f"Document chunk {idx+1} has {num_tokens} tokens.")
+    num_tokens = num_tokens_from_string(
+        doc.page_content, encoding_string="cl100k_base"
+    )  # "cl100k_base" for OpenAI's token encoding
+    print(f"\n\n---> Document chunk {idx+1} has {num_tokens} tokens.")
+    print("--->content:", doc.page_content[:100])  # Display first 100 characters
+    print("--->metadata:", doc.metadata)  # Display metadata
+    
