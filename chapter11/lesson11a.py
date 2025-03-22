@@ -1,15 +1,22 @@
 from langchain_openai import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-large",
-    # With the `text-embedding-3` class
-    # of models, you can specify the size
-    # of the embeddings you want returned.
-     dimensions=1024
-)
+# embeddings = OpenAIEmbeddings(
+#     model="text-embedding-3-large",
+#     # With the `text-embedding-3` class
+#     # of models, you can specify the size
+#     # of the embeddings you want returned.
+#      dimensions=1024
+# )
+
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+
 text = "LangChain is the framework for building context-aware reasoning applications"
+
 # Define an additional text to embed
-text2 = "LangGraph is a library for building stateful, multi-actor applications with LLMs"
+text2 = (
+    "LangGraph is a library for building stateful, multi-actor applications with LLMs"
+)
 
 # Embed both texts
 two_vectors = embeddings.embed_documents([text, text2])
