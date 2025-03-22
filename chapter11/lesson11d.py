@@ -1,18 +1,24 @@
+"""
+pip install chromadb
+"""
+
 from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain.schema import Document  # Import the Document class
 
 # Initialize embeddings model
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-large",
-    dimensions=1024
-)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 # Define sample documents as Document objects
 documents = [
-    Document(page_content="LangChain is a framework for building context-aware reasoning applications."),
-    Document(page_content="FAISS is a library for efficient similarity search and clustering of dense vectors."),
-    Document(page_content="The quick brown fox jumps over the lazy dog.")
+    Document(
+        page_content="LangChain is a framework for building context-aware reasoning applications."
+    ),
+    Document(
+        page_content="FAISS is a library for efficient similarity search and clustering of dense vectors."
+    ),
+    Document(page_content="The quick brown fox jumps over the lazy dog."),
 ]
 
 # Index documents in Chroma vector store
@@ -38,4 +44,3 @@ docs_by_vector = db.similarity_search_by_vector(query_embedding)
 # Display the content of the retrieved document
 print("Most similar document to the query (vector search):")
 print(docs_by_vector[0].page_content)
-
