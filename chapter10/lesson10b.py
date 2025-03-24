@@ -5,12 +5,18 @@ import subprocess
 import psutil
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, START, END
-from langchain_openai import ChatOpenAI
+
 from langgraph.prebuilt import create_react_agent
 from pydantic import BaseModel, Field
 from typing import Annotated, List, Tuple, Union
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import tool
+from langchain.chat_models import init_chat_model
+from langgraph.prebuilt import ToolNode
+
+# Initialize the Gemini LLM
+llm = init_chat_model("gemini-2.0-flash", model_provider="google_genai", temperature=1)
+
 
 # Define diagnostic and action tools
 @tool
@@ -69,8 +75,8 @@ prompt = ChatPromptTemplate.from_messages([
     ("placeholder", "{messages}")
 ])
 
-llm = ChatOpenAI(model="gpt-4o-mini")
-agent_executor = create_react_agent(llm, tools, state_modifier=prompt)
+
+agent_executor = create_react_agent(llm, tools)
 
 # Modified state structure to track check history and results
 class PlanExecute(TypedDict):
@@ -103,7 +109,7 @@ planner_prompt = ChatPromptTemplate.from_messages([
     ("placeholder", "{messages}"),
 ])
 
-planner = planner_prompt | ChatOpenAI(model="gpt-4o-mini", temperature=0).with_structured_output(Plan)
+planner = planner_prompt |llm.with_structured_output(Plan)
 
 # Improved replanning logic
 replanner_prompt = ChatPromptTemplate.from_template("""
@@ -128,7 +134,7 @@ Available tools:
 - restart_server
 """)
 
-replanner = replanner_prompt | ChatOpenAI(model="gpt-4o-mini", temperature=0).with_structured_output(Act)
+replanner = replanner_prompt | llm.with_structured_output(Act)
 
 # Enhanced execution step with state tracking
 async def execute_step(state: PlanExecute):

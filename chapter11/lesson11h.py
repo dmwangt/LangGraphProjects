@@ -1,6 +1,7 @@
 import os
 from langchain_openai import OpenAIEmbeddings
-from langchain_chroma import Chroma
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.vectorstores import Chroma
 from langchain_community.document_loaders import PyPDFLoader, WebBaseLoader
 from langchain_text_splitters import CharacterTextSplitter
 from langchain_core.prompts import ChatPromptTemplate
@@ -8,11 +9,10 @@ from langchain_openai import ChatOpenAI
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 import tiktoken
+from langchain.chat_models import init_chat_model
 
 # Initialize the embeddings model
-embeddings = OpenAIEmbeddings(
-    model="text-embedding-3-large"
-)
+embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 
 ### Step 1: Load and Process Local Document (PDF)
 
@@ -68,8 +68,10 @@ Answer:
 )
 
 ### Step 7: Initialize the ChatOpenAI Model
+model = init_chat_model(
+    "gemini-2.0-flash", model_provider="google_genai", temperature=0
+)
 
-model = ChatOpenAI(model="gpt-4o-mini", temperature=0)
 
 ### Step 8: Set up the Retrieval-Augmented Generation (RAG) Chain
 
@@ -82,6 +84,6 @@ rag_chain = (
 
 ### Step 9: Ask a Question and Generate a Response
 
-question = "Who are the main authors of Faiss?"
+question = "What are flat indexes in FAISS?"
 for chunk in rag_chain.stream(question):
     print(chunk, end="", flush=True)
