@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph, START, END
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, AIMessage
 from pydantic import BaseModel
+from langchain.chat_models import init_chat_model
 
 # Define the state with prompt and generated_code fields
 class CodeGenState(TypedDict):
@@ -10,7 +11,9 @@ class CodeGenState(TypedDict):
     generated_code: str
 
 # Initialize the ChatOpenAI tool for code generation
-llm = ChatOpenAI(temperature=0, model_name="gpt-4o-mini")
+
+llm = init_chat_model("gemini-2.0-flash", model_provider="google_genai", temperature=0)
+
 
 class CodeGen(BaseModel):
     """Code to generate"""
@@ -38,5 +41,5 @@ builder.add_edge("generate_code", END)
 graph = builder.compile()
 
 # Sample invocation with a natural language prompt
-result = graph.invoke({"prompt": "Write Python code for a complete LangGraph AI Agent for code generation graph using langchain_openai.", "generated_code": ""})
+result = graph.invoke({"prompt": "Write Python code for a complete LangGraph AI Agent.", "generated_code": ""})
 print(result['generated_code'])
